@@ -1,0 +1,4 @@
+{
+  "js/ai-chat.js": ["public/js/ai-chat.bundle.js"],
+  "css/ai-chat.css": ["public/scss/ai-chat.bundle.scss"]
+}

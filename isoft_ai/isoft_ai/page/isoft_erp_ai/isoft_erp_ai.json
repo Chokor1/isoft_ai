@@ -1,0 +1,29 @@
+{
+ "content": null,
+ "creation": "2025-07-04 14:48:36.539143",
+ "docstatus": 0,
+ "doctype": "Page",
+ "idx": 0,
+ "modified": "2025-07-04 14:49:26.229471",
+ "modified_by": "Administrator",
+ "module": "Isoft Ai",
+ "name": "isoft-erp-ai",
+ "owner": "Administrator",
+ "page_name": "isoft-erp-ai",
+ "roles": [
+  {
+   "role": "Accounts Manager"
+  },
+  {
+   "role": "Sales Manager"
+  },
+  {
+   "role": "Purchase Manager"
+  }
+ ],
+ "script": null,
+ "standard": "Yes",
+ "style": null,
+ "system_page": 1,
+ "title": "ISOFT ERP AI"
+}
