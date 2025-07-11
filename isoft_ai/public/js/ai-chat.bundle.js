@@ -1,16 +1,36 @@
 frappe.AI_Chat = class {
     constructor() {
+        this.selected_chat_name = null;
+        this.is_new_chat = false;
         this.setup_app();
     }
 
     create_app() {
-        this.$app_element = $(document.createElement('div')).addClass('ai-chat-app');
+        this.$app_element = $(document.createElement('div')).addClass('ai-chat-app').hide(); // Hide by default
         $('body').append(this.$app_element);
         this.is_open = false;
 
+        // Main chat container with sidebar and chat window
+        this.$main_container = $('<div class="ai-chat-main-container"></div>');
+        this.$app_element.append(this.$main_container);
+
+        // Sidebar (like ChatGPT)
+        this.$sidebar = $('<div class="ai-chat-sidebar"></div>');
+        this.$main_container.append(this.$sidebar);
+
+        // New Chat button
+        this.$new_chat_btn = $('<button class="ai-new-chat-btn">+ New Chat</button>');
+        this.$sidebar.append(this.$new_chat_btn);
+
+        // Chat list
+        this.$chat_list = $('<div class="ai-chat-list"></div>');
+        this.$sidebar.append(this.$chat_list);
+
+        // Chat window
         this.$ai_chat_element = $(document.createElement('div'))
             .addClass('ai-chat-element')
             .hide();
+        this.$main_container.append(this.$ai_chat_element);
 
         this.$ai_chat_element.append(`
 <div class="ai-chat-header">
@@ -31,36 +51,40 @@ frappe.AI_Chat = class {
 </div>
         `);
 
-        this.$ai_chat_element.appendTo(this.$app_element);
+        // Remove file upload UI from chat footer
+        // this.$ai_chat_element.find('.ai-chat-footer .input-group').prepend(...)
 
+        // Modern animated robot icon for navbar
         const navbar_icon_html = `
-        <li class='nav-item dropdown dropdown-notifications dropdown-mobile ai-chat-navbar-icon' title="Show AI Chats">
-<svg id="_x2018_ëîé_x5F_1" xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 2000 2000" width="35" height="35">
-  <!-- Generator: Adobe Illustrator 29.6.1, SVG Export Plug-In . SVG Version: 2.1.1 Build 9)  -->
-  <defs>
-    <style>
-      .st0 {
-        fill: #fff;
-      }
-
-      .st1 {
-        fill: url(#_åçûìßííûé_ãðàäèåíò_22);
-      }
-    </style>
-    <linearGradient id="_åçûìßííûé_ãðàäèåíò_22" data-name="åçûìßííûé ãðàäèåíò 22" x1="1000" y1="367.35" x2="1000" y2="1718.17" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#00b0ff"/>
-      <stop offset="1" stop-color="#007fff"/>
-    </linearGradient>
-  </defs>
-  <path class="st1" d="M1608.64,994.08c0-336.15-272.5-608.64-608.64-608.64S391.36,657.94,391.36,994.08s272.5,608.65,608.64,608.65c2.46,0,4.91-.02,7.36-.05-18.07,36.39-46.92,70.21-98.74,91.88,133.99-8.6,342.71-103.03,442.65-203.34,0,0-.01-.01-.02-.02,155.73-110.24,257.39-291.8,257.39-497.12Z"/>
-  <g>
-    <path class="st0" d="M1388.86,951.94h-.42c9.52,26.94,14.48,55.6,14.48,85.02s-4.97,58.08-14.48,85.02h.42c30.4,0,55.05-24.65,55.05-55.05v-59.95c0-30.4-24.64-55.05-55.05-55.05Z"/>
-    <path class="st0" d="M611.14,951.94c-30.4,0-55.05,24.65-55.05,55.05v59.95c0,30.4,24.64,55.05,55.05,55.05h.42c-9.52-26.94-14.48-55.6-14.48-85.02s4.97-58.08,14.48-85.02h-.42Z"/>
-    <path class="st0" d="M1148.29,800.57h-25.04v-1.29c0-16.55-13.42-29.96-29.96-29.96h-56.24c0-17.05-11.52-31.4-27.19-35.71v-76.44c15.68-4.32,27.19-18.67,27.19-35.71,0-20.46-16.59-37.05-37.05-37.05s-37.05,16.59-37.05,37.05c0,17.05,11.52,31.4,27.19,35.71v76.44c-15.68,4.32-27.19,18.67-27.19,35.71h-56.24c-16.55,0-29.96,13.42-29.96,29.96v1.29h-25.04c-130.56,0-236.39,105.84-236.39,236.39h0c0,130.56,105.84,236.39,236.39,236.39h296.58c130.56,0,236.39-105.84,236.39-236.39h0c0-130.56-105.84-236.39-236.39-236.39ZM1148.29,1153.8h-296.58c-64.42,0-116.84-52.41-116.84-116.84s52.41-116.84,116.84-116.84h296.58c64.42,0,116.84,52.41,116.84,116.84s-52.41,116.84-116.84,116.84Z"/>
-    <path class="st0" d="M884.31,1004.17c-22.82,0-41.33,18.5-41.33,41.33s18.5,24.25,41.33,24.25,41.33-1.42,41.33-24.25-18.5-41.33-41.33-41.33Z"/>
-    <path class="st0" d="M1115.69,1004.17c-22.82,0-41.33,18.5-41.33,41.33s18.5,24.25,41.33,24.25,41.33-1.42,41.33-24.25-18.5-41.33-41.33-41.33Z"/>
-  </g>
-</svg>
+        <li class='nav-item dropdown dropdown-notifications dropdown-mobile ai-chat-navbar-icon' title="Open AI Assistant" aria-label="Open AI Assistant">
+          <div class="ai-robot-icon ai-robot-sleeping" id="ai-robot-navbar">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="24" cy="24" r="22" fill="#e3eefe" stroke="#007bff" stroke-width="2"/>
+              <ellipse cx="24" cy="30" rx="10" ry="6" fill="#b0d4ff"/>
+              <rect x="14" y="16" width="20" height="14" rx="7" fill="#fff" stroke="#007bff" stroke-width="2"/>
+              <!-- Eyes: open (awake) -->
+              <circle class="ai-robot-eye-open" cx="18.5" cy="23" r="2.5" fill="#007bff"/>
+              <circle class="ai-robot-eye-open" cx="29.5" cy="23" r="2.5" fill="#007bff"/>
+              <!-- Eyes: closed (sleeping) -->
+              <ellipse class="ai-robot-eye-closed" cx="18.5" cy="23" rx="2.2" ry="0.5" fill="#007bff"/>
+              <ellipse class="ai-robot-eye-closed" cx="29.5" cy="23" rx="2.2" ry="0.5" fill="#007bff"/>
+              <rect x="21" y="27" width="6" height="2" rx="1" fill="#007bff"/>
+              <circle cx="12" cy="18" r="2" fill="#b0d4ff"/>
+              <circle cx="36" cy="18" r="2" fill="#b0d4ff"/>
+              <g class="ai-robot-gear">
+                <circle cx="24" cy="10" r="3" fill="#007bff"/>
+                <rect x="23.2" y="5" width="1.6" height="3" rx="0.8" fill="#007bff"/>
+                <rect x="23.2" y="12" width="1.6" height="3" rx="0.8" fill="#007bff"/>
+                <rect x="19.5" y="8.2" width="3" height="1.6" rx="0.8" fill="#007bff" transform="rotate(-45 19.5 8.2)"/>
+                <rect x="25.5" y="8.2" width="3" height="1.6" rx="0.8" fill="#007bff" transform="rotate(45 25.5 8.2)"/>
+              </g>
+              <g class="ai-robot-zs">
+                <text x="38" y="10" font-size="6" fill="#b0d4ff" opacity="0.8">Z</text>
+                <text x="41" y="6" font-size="4" fill="#b0d4ff" opacity="0.7">z</text>
+                <text x="43" y="3" font-size="3" fill="#b0d4ff" opacity="0.6">z</text>
+              </g>
+            </svg>
+          </div>
         </li>`;
 
         if (this.is_desk === true) {
@@ -70,6 +94,7 @@ frappe.AI_Chat = class {
         this.chat_history = [];
         this.append_message('assistant', "👋 Welcome to Pulsar AI Assistant!\nAsk me anything about your ERP system, reports, invoices, stock..");
         this.setup_events();
+        this.load_chat_list();
     }
 
     setup_app() {
@@ -83,8 +108,9 @@ frappe.AI_Chat = class {
 
     append_message(role, message) {
         const chatBox = $('#ai-chat-history');
+        // Only escape user messages, allow assistant messages to be raw HTML
         const isHTML = /<\/?[a-z][\s\S]*>/i.test(message);
-        const safe_msg = isHTML ? message : frappe.utils.escape_html(message);
+        const safe_msg = (role === 'assistant') ? message : (isHTML ? message : frappe.utils.escape_html(message));
 
         const msgDiv = $(`<div class="message ${role}">
             <div class="sender">${role === 'user' ? 'You' : 'Pulsar AI'}:</div>
@@ -97,51 +123,54 @@ frappe.AI_Chat = class {
     }
 
     simulateTyping(text, done) {
+        // Show typing indicator for 1.2 seconds, then display full HTML response
         const chatBox = $('#ai-chat-history');
         const typingDiv = $(`<div class="message assistant typing">
             <div class="sender">Pulsar AI:</div>
-            <div class="bubble" id="typing-bubble"><span class="blink">|</span></div>
+            <div class="bubble" id="typing-indicator">
+                <span class="dot dot1"></span>
+                <span class="dot dot2"></span>
+                <span class="dot dot3"></span>
+            </div>
         </div>`);
         chatBox.append(typingDiv);
-
         const chatBoxEl = chatBox[0];
         if (chatBoxEl) chatBoxEl.scrollTop = chatBoxEl.scrollHeight;
-
-        let index = 0;
-        let displayed = "";
-
-        const interval = setInterval(() => {
-            const bubble = $('#typing-bubble');
-            if (!bubble.length) {
-                clearInterval(interval);
-                return;
-            }
-
-            if (index >= text.length) {
-                clearInterval(interval);
-                typingDiv.remove();
-                this.append_message('assistant', text);
-                if (done) done();
-            } else {
-                displayed += frappe.utils.escape_html(text[index]);
-                bubble.html(displayed + '<span class="blink">|</span>');
-                if (chatBoxEl) chatBoxEl.scrollTop = chatBoxEl.scrollHeight;
-                index++;
-            }
-        }, 20);
+        setTimeout(() => {
+            typingDiv.remove();
+            this.append_message('assistant', text);
+            if (done) done();
+        }, 1200);
     }
 
     setup_events() {
         const me = this;
 
-        $('#ai-send-btn').on('click', function () {
-            const user_input = $('#ai-user-input').val().trim();
+        // New Chat button logic
+        this.$new_chat_btn.on('click', function () {
+            me.is_new_chat = true;
+            me.selected_chat_name = null;
+            me.chat_history = [];
+            $('#ai-chat-history').empty();
+            me.append_message('assistant', "👋 Welcome to Pulsar AI Assistant!\nAsk me anything about your ERP system, reports, invoices, stock..");
+            me.$ai_chat_element.show();
+            // Remove active from all chat list items
+            me.$chat_list.find('.ai-chat-list-item').removeClass('active');
+        });
+
+        const mainInput = this.$ai_chat_element.find('#ai-user-input');
+        // Remove reference to the order input (no longer needed)
+
+        // Remove all file upload and order related event handlers and logic in setup_events
+        // Remove all references to upload_file_with_order API, file preview, file input, and order
+
+        // Use only one send button for both text and file
+        $('#ai-send-btn').off('click').on('click', function () {
+            const user_input = mainInput.val().trim();
             if (!user_input) return;
-
             me.append_message('user', user_input);
-            $('#ai-user-input').val('');
+            mainInput.val('');
             me.chat_history.push({ role: 'user', content: user_input });
-
             const typingDiv = $(`<div class="message assistant typing">
                 <div class="sender">Pulsar AI:</div>
                 <div class="bubble" id="ai-typing-indicator">
@@ -151,23 +180,28 @@ frappe.AI_Chat = class {
                 </div>
             </div>`);
             $('#ai-chat-history').append(typingDiv);
-
             frappe.call({
                 method: 'isoft_ai.isoft_ai.doctype.isoft_ai_test.isoft_ai_test.ask_ai',
                 args: {
                     user_question: user_input,
-                    chat_history_json: JSON.stringify(me.chat_history)
+                    chat_history_json: JSON.stringify(me.chat_history),
+                    ai_chat_name: me.is_new_chat ? '' : (me.selected_chat_name || '')
                 },
                 callback: function (r) {
                     $('#ai-typing-indicator').closest('.typing').remove();
-
                     if (r.message) {
-                        if (typeof r.message === 'string' && r.message.startsWith('/files/')) {
-                            const file_url = window.location.origin + r.message;
+                        // --- NEW LOGIC: store chat_name after first message ---
+                        if (me.is_new_chat && r.message.chat_name) {
+                            me.selected_chat_name = r.message.chat_name;
+                            me.is_new_chat = false;
+                        }
+                        // --- END NEW LOGIC ---
+                        if (typeof r.message.ai_response === 'string' && r.message.ai_response.startsWith('/files/')) {
+                            const file_url = window.location.origin + r.message.ai_response;
                             me.append_message('assistant', `📁 <a href="${file_url}" target="_blank" download>Download your file</a>`);
                         } else {
-                            me.chat_history.push({ role: 'assistant', content: r.message });
-                            me.simulateTyping(r.message);
+                            me.chat_history.push({ role: 'assistant', content: r.message.ai_response });
+                            me.simulateTyping(r.message.ai_response);
                         }
                     }
                 }
@@ -180,18 +214,125 @@ frappe.AI_Chat = class {
             }
         });
 
-        $('.ai-chat-navbar-icon').on('click', function () {
-            me.$ai_chat_element.toggle();
-            me.is_open = !me.is_open;
+        // Attach open/close logic directly to the robot icon
+        $(document).on('click', '#ai-robot-navbar', (e) => {
+            e.stopPropagation();
+            if (!this.is_open) {
+                this.$app_element.show();
+                // Open new chat by default
+                this.is_new_chat = true;
+                this.selected_chat_name = null;
+                this.chat_history = [];
+                $('#ai-chat-history').empty();
+                this.append_message('assistant', "👋 Welcome to Pulsar AI Assistant!\nAsk me anything about your ERP system, reports, invoices, stock..");
+                this.$ai_chat_element.show();
+                $('#ai-robot-navbar').removeClass('ai-robot-sleeping').addClass('ai-robot-awake');
+                // Remove active from all chat list items
+                this.$chat_list.find('.ai-chat-list-item').removeClass('active');
+            } else {
+                this.$app_element.hide();
+                $('#ai-robot-navbar').removeClass('ai-robot-awake').addClass('ai-robot-sleeping');
+            }
+            this.is_open = !this.is_open;
         });
+        // Also close on cross button
+        this.$ai_chat_element.find('.ai-chat-cross-button').on('click', () => {
+            this.$app_element.hide();
+            $('#ai-robot-navbar').removeClass('ai-robot-awake').addClass('ai-robot-sleeping');
+            this.is_open = false;
+        });
+    }
 
-        this.$ai_chat_element.find('.ai-chat-cross-button').on('click', function () {
-            me.$ai_chat_element.hide();
-            me.is_open = false;
+    // Load chat list for the user and render clickable items
+    load_chat_list() {
+        const me = this;
+        frappe.call({
+            method: 'isoft_ai.isoft_ai.doctype.isoft_ai_test.isoft_ai_test.get_user_ai_chats',
+            args: { owner_id: frappe.session.user },
+            callback: function(r) {
+                if (r.message && Array.isArray(r.message)) {
+                    me.$chat_list.empty();
+                    r.message.forEach(chat => {
+                        const $item = $(`<div class="ai-chat-list-item" data-chat-name="${chat.name}">
+                            <span class="ai-chat-title">${frappe.utils.escape_html(chat.title)}</span>
+                            <span class="ai-chat-delete" title="Delete chat" aria-label="Delete chat">
+                              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="10" cy="10" r="9" stroke="#f5c6cb" stroke-width="1.5"/>
+                                <line x1="6" y1="6" x2="14" y2="14" stroke="#e74c3c" stroke-width="2" stroke-linecap="round"/>
+                                <line x1="14" y1="6" x2="6" y2="14" stroke="#e74c3c" stroke-width="2" stroke-linecap="round"/>
+                              </svg>
+                            </span>
+                        </div>`);
+                        $item.find('.ai-chat-delete').on('click', function(e) {
+                            e.stopPropagation();
+                            if (confirm('Are you sure you want to send this chat to the AI dreamland? (It will be softly deleted)')) {
+                                frappe.call({
+                                    method: 'isoft_ai.isoft_ai.doctype.isoft_ai_test.isoft_ai_test.soft_delete_ai_chat',
+                                    args: { chat_name: chat.name },
+                                    callback: function(r) {
+                                        if (r.message && r.message.success) {
+                                            $item.remove();
+                                        } else {
+                                            frappe.msgprint('Failed to delete chat.');
+                                        }
+                                    }
+                                });
+                            }
+                        });
+                        $item.on('click', function() {
+                            me.is_new_chat = false;
+                            me.selected_chat_name = chat.name;
+                            me.load_chat_messages(chat.name);
+                            me.$ai_chat_element.show();
+                            me.$chat_list.find('.ai-chat-list-item').removeClass('active');
+                            $item.addClass('active');
+                        });
+                        me.$chat_list.append($item);
+                    });
+                }
+            }
+        });
+    }
+
+    // Fetch and render messages for a specific chat
+    load_chat_messages(chat_name) {
+        const me = this;
+        $('#ai-chat-history').empty();
+        me.chat_history = [];
+        frappe.call({
+            method: 'isoft_ai.isoft_ai.doctype.isoft_ai_test.isoft_ai_test.get_ai_chat_messages',
+            args: { chat_name: chat_name },
+            callback: function(r) {
+                if (r.message && Array.isArray(r.message)) {
+                    r.message.forEach(msg => {
+                        me.append_message('user', msg.user_question);
+                        let ai_response = msg.ai_response;
+                        if (typeof ai_response === 'string' && ai_response.trim().startsWith('/files/')) {
+                            const file_url = window.location.origin + ai_response.trim();
+                            ai_response = `📁 <a href="${file_url}" target="_blank" download>Download your file</a>`;
+                        }
+                        me.append_message('assistant', ai_response);
+                        me.chat_history.push({ role: 'user', content: msg.user_question });
+                        me.chat_history.push({ role: 'assistant', content: ai_response });
+                    });
+                }
+            }
         });
     }
 };
 
 $(function () {
-    new frappe.AI_Chat();
+    const chatApp = new frappe.AI_Chat();
+    // Click outside to close logic
+    $(document).on('mousedown touchstart', function(e) {
+        const $target = $(e.target);
+        const isInChat = $target.closest('.ai-chat-app').length > 0;
+        const isNavbarIcon = $target.closest('.ai-chat-navbar-icon').length > 0;
+        if (!isInChat && !isNavbarIcon && chatApp.is_open) {
+            chatApp.$app_element.hide();
+            chatApp.is_open = false;
+            $('#ai-robot-navbar').removeClass('ai-robot-awake').addClass('ai-robot-sleeping');
+            // Do NOT reset chat state or remove active highlight here
+        }
+    });
 });
