@@ -13,12 +13,12 @@ app_license = "MIT"
 # ------------------
 
 # include js, css files in header of desk.html
-app_include_css = ['/assets/css/ai-chat.css']
-app_include_js =  ['/assets/js/ai-chat.js']
+app_include_css = ['/assets/css/ai-chat.css','/assets/css/isoft-ai.css']
+app_include_js =  ['/assets/js/ai-chat.js','/assets/js/isoft-ai.js']
 
 # include js, css files in header of web template
-web_include_css = ['/assets/css/ai-chat.css']
-web_include_js = ['/assets/js/ai-chat.js']
+web_include_css = ['/assets/css/ai-chat.css','/assets/css/ai-chat.css']
+web_include_js = ['/assets/js/ai-chat.js','/assets/js/isoft-ai.js']
 
 # include custom scss in every website theme (without file extension ".scss")
 # website_theme_scss = "isoft_ai/public/scss/website"

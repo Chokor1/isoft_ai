@@ -1,4 +1,6 @@
 {
   "js/ai-chat.js": ["public/js/ai-chat.bundle.js"],
-  "css/ai-chat.css": ["public/scss/ai-chat.bundle.scss"]
+  "css/ai-chat.css": ["public/scss/ai-chat.bundle.scss"],
+  "js/isoft-ai.js": ["public/js/isoft-ai.bundle.js"],
+  "css/isoft-ai.css": ["public/scss/isoft-ai.bundle.scss"]
 }
